@@ -1,11 +1,18 @@
 #include <TM1638.h>
-// https://github.com/rjbatista/tm1638-library
 
 // define a module on data pin 3, clock pin 2 and strobe pin 4
 TM1638 module(3, 2, 4);
-// Declare Variables
+//Declare Variables
 byte buttons;
 int firstDigit, secondDigit, thirdDigit, fourthDigit, fifthDigit, sixthDigit, seventhDigit, eighthDigit = 0;
+int firstScreen = 128;
+int secondScreen = 64;
+int thirdScreen = 32;
+int fourthScreen = 16;
+int fifthScreen = 8;
+int sixthScreen = 4;
+int seventhScreen = 2;
+int eighthScreen = 1;
 
 void setup()
 {
@@ -13,29 +20,33 @@ void setup()
 }
 void loop()
 {
-  // module.clearDisplay();
-  // Read buttons and add a digit if pressed
+  //module.clearDisplay();
+  //Read buttons and add a digit if pressed
   buttons = module.getButtons();
   if (buttons == 1){
-    firstDigit = AddNumberToDigit(firstDigit, 0);
+    Serial.print("FirstDigit Before: ");
+    Serial.println(firstDigit);
+    firstDigit = AddNumberToDigit(firstDigit, firstScreen);
     Serial.println("Button 1 Pressed");
+    Serial.print("FirstDigit After: ");
+    Serial.println(firstDigit);
   }
   if (buttons == 2){
-    secondDigit = AddNumberToDigit(secondDigit, 0);
+    secondDigit = AddNumberToDigit(secondDigit, secondScreen);
     Serial.println("Button 2 Pressed");
   }
   delay (100);
 }
 
-// Function to add a number to the display
+//Function to add a number to the display
 int AddNumberToDigit(int currentDigit, int displayNumber){
   Serial.print("currentDigit Before: ");
   Serial.println(currentDigit);
-  currentDigit = currentDigit++;
+  ++currentDigit;
   if (currentDigit > 9) {
     currentDigit = 0;
   }
-  module.setDisplayToDecNumber(displayNumber,currentDigit,false);
+  module.setDisplayToDecNumber(currentDigit,displayNumber,false);
   Serial.print("currentDigit After: ");
   Serial.println(currentDigit);
   return currentDigit;
