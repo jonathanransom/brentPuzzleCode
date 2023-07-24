@@ -2,17 +2,18 @@
 
 // define a module on data pin 3, clock pin 2 and strobe pin 4
 TM1638 module(3, 2, 4);
+
 //Declare Variables
 byte buttons;
 int firstDigit, secondDigit, thirdDigit, fourthDigit, fifthDigit, sixthDigit, seventhDigit, eighthDigit = 0;
-int firstScreen = 128;
-int secondScreen = 64;
-int thirdScreen = 32;
-int fourthScreen = 16;
-int fifthScreen = 8;
-int sixthScreen = 4;
-int seventhScreen = 2;
-int eighthScreen = 1;
+int firstScreen = 64;
+int secondScreen = 32;
+int thirdScreen = 16;
+int fourthScreen = 8;
+int fifthScreen = 4;
+int sixthScreen = 2;
+int seventhScreen = 1;
+int eighthScreen = 0;
 
 void setup()
 {
@@ -46,7 +47,7 @@ int AddNumberToDigit(int currentDigit, int displayNumber){
   if (currentDigit > 9) {
     currentDigit = 0;
   }
-  module.setDisplayToDecNumber(currentDigit,displayNumber,false);
+  module.setDisplayDigit(currentDigit,displayNumber,false);
   Serial.print("currentDigit After: ");
   Serial.println(currentDigit);
   return currentDigit;
