@@ -1,0 +1,116 @@
+#include <TM1638.h>
+
+// Replace these with the actual TM1638 pin numbers
+#define TM1638_CLK_PIN 2
+#define TM1638_DIO_PIN 3
+#define TM1638_STB_PIN 4
+
+// Replace with the actual relay control pin number
+#define RELAY_PIN 8
+
+// Constants for reset functionality
+const int NUM_BUTTONS_FOR_RESET = 3;
+const unsigned long RESET_HOLD_TIME = 5000; // 5 seconds in milliseconds
+
+// Create the TM1638plus instance with the pin numbers
+TM1638 module;
+
+int digitValues[8] = {0, 0, 0, 0, 0, 0, 0, 0}; // Initial values for each digit
+bool flashingZeros = true;
+bool isTriggered = false;
+
+void setup() {
+  module.setupDisplay(true); // Enable the display (if not already enabled)
+  module.setDisplayDigits(8); // Set the display size to 8 digits
+  module.setBrightness(7); // Set the display brightness (0 to 7, with 7 being the brightest)
+  module.clearDisplay();
+  pinMode(RELAY_PIN, OUTPUT);
+  digitalWrite(RELAY_PIN, HIGH); // Set the relay to NO state (Normally Open)
+
+  // Flash zeros on all digits and LEDs at startup
+  for (int i = 0; i < 5; i++) {
+    displayZerosAndLEDs(true);
+    delay(250);
+    displayZerosAndLEDs(false);
+    delay(250);
+  }
+  displayZerosAndLEDs(false);
+}
+
+void loop() {
+  // Read buttons
+  for (int i = 0; i < 8; i++) {
+    if (module.getButton(i)) {
+      handleButtonPress(i);
+    }
+  }
+
+  // Check for reset condition
+  checkResetCondition();
+}
+
+void handleButtonPress(int buttonIndex) {
+  digitValues[buttonIndex] = (digitValues[buttonIndex] + 1) % 10;
+  module.setDisplayToDecNumber(digitValues);
+  checkTriggerCode();
+}
+
+void checkTriggerCode() {
+  int triggerCode[8] = {2, 0, 2, 3, 1, 9, 8, 3};
+  for (int i = 0; i < 8; i++) {
+    if (digitValues[i] != triggerCode[i]) {
+      return;
+    }
+  }
+  // Trigger the relay and animate the display and LEDs
+  triggerRelayAndAnimate();
+}
+
+void triggerRelayAndAnimate() {
+  // Trigger the relay (you may add the necessary relay logic here)
+  digitalWrite(RELAY_PIN, LOW);
+  delay(1000); // Relay active for 1 second
+  digitalWrite(RELAY_PIN, HIGH);
+
+  // Animate the display and LEDs at random
+  for (int i = 0; i < 5; i++) {
+    displayRandomValuesAndLEDs();
+    delay(250);
+  }
+  displayZerosAndLEDs(false);
+}
+
+void displayRandomValuesAndLEDs() {
+  for (int i = 0; i < 8; i++) {
+    digitValues[i] = random(10);
+    module.setLED(i, random(2) == 1);
+  }
+  module.setDisplayToDecNumber(digitValues);
+}
+
+void checkResetCondition() {
+  static int buttonPressCount = 0;
+  static unsigned long lastButtonPressTime = 0;
+
+  if (module.getButtons() != 0) {
+    unsigned long currentTime = millis();
+    if (currentTime - lastButtonPressTime > RESET_HOLD_TIME) {
+      buttonPressCount = 1;
+    } else {
+      buttonPressCount++;
+      if (buttonPressCount >= NUM_BUTTONS_FOR_RESET) {
+        // Perform the reset action (you can reset the Arduino here)
+        resetArduino();
+      }
+    }
+    lastButtonPressTime = currentTime;
+  } else {
+    buttonPressCount = 0;
+  }
+}
+
+void resetArduino() {
+  // Add your Arduino reset logic here, if required
+  // Note: Arduino reset might not be supported by all boards.
+  // If your board doesn't support reset via software, you may need to use external circuitry.
+}
