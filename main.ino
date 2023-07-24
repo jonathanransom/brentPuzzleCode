@@ -1,54 +1,56 @@
+// Code by Guppy, the best Arduino programmer I know!
 #include <TM1638.h>
 
-// define a module on data pin 3, clock pin 2 and strobe pin 4
-TM1638 module(3, 2, 4);
+TM1638 tm(3, 2, 4);
 
-//Declare Variables
-byte buttons;
-int firstDigit, secondDigit, thirdDigit, fourthDigit, fifthDigit, sixthDigit, seventhDigit, eighthDigit = 0;
-int firstScreen = 64;
-int secondScreen = 32;
-int thirdScreen = 16;
-int fourthScreen = 8;
-int fifthScreen = 4;
-int sixthScreen = 2;
-int seventhScreen = 1;
-int eighthScreen = 0;
-
-void setup()
-{
-  Serial.begin(9600);
-}
-void loop()
-{
-  //module.clearDisplay();
-  //Read buttons and add a digit if pressed
-  buttons = module.getButtons();
-  if (buttons == 1){
-    Serial.print("FirstDigit Before: ");
-    Serial.println(firstDigit);
-    firstDigit = AddNumberToDigit(firstDigit, firstScreen);
-    Serial.println("Button 1 Pressed");
-    Serial.print("FirstDigit After: ");
-    Serial.println(firstDigit);
-  }
-  if (buttons == 2){
-    secondDigit = AddNumberToDigit(secondDigit, secondScreen);
-    Serial.println("Button 2 Pressed");
-  }
-  delay (100);
+bool relay = false;
+uint8_t buttons = 0;
+uint8_t oldButtons = 0;
+uint8_t testCombo[8] = {0,0,0,0,0,0,0,0};
+uint8_t combo[8] = {2,0,2,3,1,9,8,3};
+void setup() {
+  tm.reset();
+  pinMode(relay, OUTPUT);
 }
 
-//Function to add a number to the display
-int AddNumberToDigit(int currentDigit, int displayNumber){
-  Serial.print("currentDigit Before: ");
-  Serial.println(currentDigit);
-  ++currentDigit;
-  if (currentDigit > 9) {
-    currentDigit = 0;
+void loop() {
+  // put your main code here, to run repeatedly:
+  buttons = tm.getButtons();
+  bool buttonPressed = false;
+
+  for (uint8_t i = 0; i < 8; i++){
+    bool button = (buttons  >> i) & 1;
+    bool oldButton = (oldButtons  >> i) & 1;
+    if (button != oldButton){
+      if(button){
+        if(testCombo[i] < 9){
+          testCombo[i] ++;
+        }
+        else{
+          testCombo[i] = 0;
+        }
+        buttonPressed = true;
+        
+      }
+      oldButtons |= 1 << i;;
+    }
+     tm.displayDig(i, testCombo[i]);
   }
-  module.setDisplayDigit(currentDigit,displayNumber,false);
-  Serial.print("currentDigit After: ");
-  Serial.println(currentDigit);
-  return currentDigit;
+
+  if(buttonPressed){
+    bool comboMatched = true;
+    for (uint8_t i = 0; i < 8; i++){
+      if(combo[i] != testCombo[i]){
+        comboMatched = false;
+      }
+    }
+    if(comboMatched){
+      digitalWrite(relay, HIGH);  // trigger relay
+      delay(1000);                // wait for a second
+      digitalWrite(relay, LOW);   // turn the relay off
+    }
+  }
+
+  delay(100);
+
 }
