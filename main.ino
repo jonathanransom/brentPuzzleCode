@@ -1,16 +1,17 @@
 // Code by Guppy, the best Arduino programmer I know!
 #include <TM1638.h>
 
-TM1638 tm(3, 2, 4);
+TM1638 tm(2, 3, 4);
 
-bool relay = false;
+int relay = 10;
 uint8_t buttons = 0;
 uint8_t oldButtons = 0;
 uint8_t testCombo[8] = {0,0,0,0,0,0,0,0};
-uint8_t combo[8] = {2,0,2,3,1,9,8,3};
+uint8_t combo[8] = {1,2,3,4,5,6,7,8};
 void setup() {
   tm.reset();
   pinMode(relay, OUTPUT);
+  digitalWrite(relay, HIGH);
 }
 
 void loop() {
@@ -30,11 +31,14 @@ void loop() {
           testCombo[i] = 0;
         }
         buttonPressed = true;
-        
+        oldButtons |= 1 << i;
       }
-      oldButtons |= 1 << i;;
+      else {
+        oldButtons &= ~(1 << i);
+      }
+      
     }
-     tm.displayDig(i, testCombo[i]);
+     tm.displayVal(7-i, testCombo[i]);
   }
 
   if(buttonPressed){
@@ -45,12 +49,11 @@ void loop() {
       }
     }
     if(comboMatched){
-      digitalWrite(relay, HIGH);  // trigger relay
+      digitalWrite(relay, LOW);  // trigger relay
       delay(1000);                // wait for a second
-      digitalWrite(relay, LOW);   // turn the relay off
+      digitalWrite(relay, HIGH);   // turn the relay off
     }
   }
 
   delay(100);
-
 }
